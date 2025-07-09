@@ -39,7 +39,7 @@ pipeline {
 
         stage("SonarQube Analysis") {
             steps {
-                withSonarQubeEnv('SonarQube') {
+                withSonarQubeEnv('sonarqube-server') { // ✅ Fixed here
                     sh """
                         mvn sonar:sonar \
                         -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
