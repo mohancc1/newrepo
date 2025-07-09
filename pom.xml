@@ -10,7 +10,7 @@
 
     <!-- ✅ Add SonarQube server URL here -->
     <properties>
-        <sonar.host.url>http://172.31.28.120:9000</sonar.host.url>
+        <sonar.host.url>http://54.85.147.48:9000</sonar.host.url>
     </properties>
 
     <dependencies>
