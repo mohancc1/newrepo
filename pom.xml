@@ -8,6 +8,11 @@
     <artifactId>myapp</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <!-- ✅ Add SonarQube server URL here -->
+    <properties>
+        <sonar.host.url>http://172.31.28.120:9000</sonar.host.url>
+    </properties>
+
     <dependencies>
         <!-- Sample JUnit dependency -->
         <dependency>
