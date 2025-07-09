@@ -8,8 +8,8 @@ pipeline {
 
     environment {
         SONAR_PROJECT_KEY = 'myapp'
-        SONAR_HOST_URL = 'http://54.85.147.48:9000'
-        SONAR_TOKEN = credentials('jenkins-sonarqube-token') // Stored in Jenkins credentials
+        SONAR_HOST_URL = 'http://54.85.147.48:9000'  // ✅ Fixed: added http://
+        SONAR_TOKEN = credentials('jenkins-sonarqube-token') // ✅ Stored token
     }
 
     stages {
@@ -39,13 +39,13 @@ pipeline {
 
         stage("SonarQube Analysis") {
             steps {
-                withSonarQubeEnv('sonarqube-server') { // ✅ Fixed here
-                    sh """
+                withSonarQubeEnv('sonarqube-server') {  // ✅ Make sure this matches Jenkins > Manage Jenkins > SonarQube name
+                    sh '''
                         mvn sonar:sonar \
                         -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
                         -Dsonar.host.url=${SONAR_HOST_URL} \
-                        -Dsonar.login=${SONAR_TOKEN}
-                    """
+                        -Dsonar.login=$SONAR_TOKEN
+                    '''
                 }
             }
         }
