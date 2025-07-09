@@ -1,9 +1,17 @@
 pipeline {
     agent { label 'Jenkins-Agent' }
+    
     tools {
         jdk 'Java17'
         maven 'Maven3'
     }
+
+    environment {
+        SONAR_PROJECT_KEY = 'myapp'
+        SONAR_HOST_URL = 'http://54.85.147.48:9000'
+        SONAR_TOKEN = credentials('jenkins-sonarqube-token') // Stored in Jenkins credentials
+    }
+
     stages {
         stage("Cleanup Workspace") {
             steps {
@@ -19,22 +27,25 @@ pipeline {
 
         stage("Build Application") {
             steps {
-                sh "mvn clean package"
+                sh 'mvn clean package'
             }
         }
 
         stage("Test Application") {
             steps {
-                sh "mvn test"
+                sh 'mvn test'
             }
         }
 
         stage("SonarQube Analysis") {
             steps {
-                script {
-                    withSonarQubeEnv(credentialsId: 'jenkins-sonarqube-token') {
-                        sh "mvn sonar:sonar"
-                    }
+                withSonarQubeEnv('SonarQube') {
+                    sh """
+                        mvn sonar:sonar \
+                        -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                        -Dsonar.host.url=${SONAR_HOST_URL} \
+                        -Dsonar.login=${SONAR_TOKEN}
+                    """
                 }
             }
         }
