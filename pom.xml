@@ -8,7 +8,7 @@
     <artifactId>myapp</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-    <!-- ✅ Add SonarQube server URL here -->
+    <!-- ✅ Optional: for documentation -->
     <properties>
         <sonar.host.url>http://172.31.28.120:9000</sonar.host.url>
     </properties>
@@ -22,4 +22,15 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <!-- ✅ SonarQube plugin -->
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>4.0.0.4121</version>
+            </plugin>
+        </plugins>
+    </build>
 </project>
