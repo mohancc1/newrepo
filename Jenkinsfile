@@ -1,15 +1,14 @@
 pipeline {
     agent { label 'Jenkins-Agent' }
-    
+
     tools {
         jdk 'Java17'
         maven 'Maven3'
     }
 
     environment {
-        SONAR_PROJECT_KEY = 'myapp'
-        SONAR_HOST_URL = 'http://54.85.147.48:9000'  // ✅ Fixed: added http://
-        SONAR_TOKEN = credentials('jenkins-sonarqube-token') // ✅ Stored token
+        SONAR_PROJECT_KEY = 'myapp' // ✅ Change this to match your SonarQube project key if needed
+        SONAR_TOKEN = credentials('jenkins-sonarqube-token') // ✅ Must match Jenkins > Credentials ID for your Sonar token
     }
 
     stages {
@@ -22,6 +21,7 @@ pipeline {
         stage("Checkout from SCM") {
             steps {
                 git branch: 'main', credentialsId: 'github', url: 'https://github.com/mohancc1/newrepo'
+                // ✅ 'github' must match your Jenkins credential ID for GitHub
             }
         }
 
@@ -39,13 +39,15 @@ pipeline {
 
         stage("SonarQube Analysis") {
             steps {
-                withSonarQubeEnv('sonarqube-server') {  // ✅ Make sure this matches Jenkins > Manage Jenkins > SonarQube name
-                    sh '''
+                withSonarQubeEnv('sonarqube-server') {
+                    // ✅ 'sonarqube-server' must match the name configured in:
+                    // Jenkins > Manage Jenkins > Configure System > SonarQube Servers
+                    sh """
                         mvn sonar:sonar \
                         -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                        -Dsonar.host.url=${SONAR_HOST_URL} \
+                        -Dsonar.host.url=http://54.85.147.48:9000 \
                         -Dsonar.login=$SONAR_TOKEN
-                    '''
+                    """
                 }
             }
         }
