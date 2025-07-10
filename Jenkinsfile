@@ -65,7 +65,7 @@ pipeline {
             steps {
                 withCredentials([
                     usernamePassword(
-                        credentialsId: 'dockerhub', // 👈 Make sure this ID matches what's stored in Jenkins
+                        credentialsId: 'dockerhub',
                         usernameVariable: 'DOCKER_USER',
                         passwordVariable: 'DOCKER_PASS'
                     )
@@ -79,6 +79,28 @@ pipeline {
                             dockerImage.push("latest")
                         }
                     }
+                }
+            }
+        }
+
+        stage("Trivy Scan") {
+            steps {
+                script {
+                    sh '''
+                        docker run -v /var/run/docker.sock:/var/run/docker.sock \
+                        aquasec/trivy image ${DOCKER_USER}/${APP_NAME}:latest \
+                        --no-progress --scanners vuln \
+                        --exit-code 0 --severity HIGH,CRITICAL --format table
+                    '''
+                }
+            }
+        }
+
+        stage("Cleanup Artifacts") {
+            steps {
+                script {
+                    sh "docker rmi ${DOCKER_USER}/${APP_NAME}:${IMAGE_TAG}"
+                    sh "docker rmi ${DOCKER_USER}/${APP_NAME}:latest"
                 }
             }
         }
