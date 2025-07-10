@@ -85,22 +85,38 @@ pipeline {
 
         stage("Trivy Scan") {
             steps {
-                script {
-                    sh """
-                        docker run -v /var/run/docker.sock:/var/run/docker.sock \
-                        aquasec/trivy image ${DOCKER_USER}/${APP_NAME}:latest \
-                        --no-progress --scanners vuln \
-                        --exit-code 0 --severity HIGH,CRITICAL --format table
-                    """
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
+                    script {
+                        sh """
+                            docker run -v /var/run/docker.sock:/var/run/docker.sock \
+                            aquasec/trivy image ${DOCKER_USER}/${APP_NAME}:latest \
+                            --no-progress --scanners vuln \
+                            --exit-code 0 --severity HIGH,CRITICAL --format table
+                        """
+                    }
                 }
             }
         }
 
         stage("Cleanup Artifacts") {
             steps {
-                script {
-                    sh "docker rmi ${DOCKER_USER}/${APP_NAME}:${IMAGE_TAG} || true"
-                    sh "docker rmi ${DOCKER_USER}/${APP_NAME}:latest || true"
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
+                    script {
+                        sh "docker rmi ${DOCKER_USER}/${APP_NAME}:${IMAGE_TAG} || true"
+                        sh "docker rmi ${DOCKER_USER}/${APP_NAME}:latest || true"
+                    }
                 }
             }
         }
