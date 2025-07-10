@@ -7,8 +7,15 @@ pipeline {
     }
 
     environment {
-        SONAR_PROJECT_KEY = 'myapp' // ✅ Change this to match your SonarQube project key if needed
-        SONAR_TOKEN = credentials('jenkins-sonarqube-token') // ✅ Must match Jenkins > Credentials ID for your Sonar token
+        SONAR_PROJECT_KEY = 'myapp'
+        SONAR_TOKEN       = credentials('jenkins-sonarqube-token')
+
+        APP_NAME    = "register-app-pipeline"
+        RELEASE     = "1.0.0"
+        DOCKER_USER = "mohancc1"
+        DOCKER_PASS = credentials('dockerhub') // 🔐 Use Jenkins credentials ID here
+        IMAGE_NAME  = "${DOCKER_USER}/${APP_NAME}"
+        IMAGE_TAG   = "${RELEASE}-${BUILD_NUMBER}"
     }
 
     stages {
@@ -21,7 +28,6 @@ pipeline {
         stage("Checkout from SCM") {
             steps {
                 git branch: 'main', credentialsId: 'github', url: 'https://github.com/mohancc1/newrepo'
-                // ✅ 'github' must match your Jenkins credential ID for GitHub
             }
         }
 
@@ -40,23 +46,32 @@ pipeline {
         stage("SonarQube Analysis") {
             steps {
                 withSonarQubeEnv('sonarqube-server') {
-                    // ✅ 'sonarqube-server' must match the name configured in:
-                    // Jenkins > Manage Jenkins > Configure System > SonarQube Servers
-                    sh """
+                    sh '''
                         mvn sonar:sonar \
-                        -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                        -Dsonar.projectKey=$SONAR_PROJECT_KEY \
                         -Dsonar.host.url=http://54.92.199.33:9000 \
                         -Dsonar.login=$SONAR_TOKEN
-                    """
+                    '''
                 }
             }
         }
 
-        // ✅ Added Quality Gate Stage
         stage("Quality Gate") {
             steps {
                 script {
                     waitForQualityGate abortPipeline: false, credentialsId: 'jenkins-sonarqube-token'
+                }
+            }
+        }
+
+        stage("Build & Push Docker Image") {
+            steps {
+                script {
+                    docker.withRegistry('', DOCKER_PASS) {
+                        def dockerImage = docker.build("${IMAGE_NAME}")
+                        dockerImage.push("${IMAGE_TAG}")
+                        dockerImage.push("latest")
+                    }
                 }
             }
         }
