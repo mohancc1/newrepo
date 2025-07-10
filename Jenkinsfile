@@ -9,9 +9,13 @@ pipeline {
     environment {
         SONAR_PROJECT_KEY = 'myapp'
         SONAR_TOKEN       = credentials('jenkins-sonarqube-token')
-        APP_NAME          = "register-app-pipeline"
-        RELEASE           = "1.0.0"
-        IMAGE_TAG         = "${RELEASE}-${BUILD_NUMBER}"
+
+        APP_NAME    = "register-app-pipeline"
+        RELEASE     = "1.0.0"
+        DOCKER_USER = "mohancc1" // 🔁 Replace with your actual DockerHub username if different
+        DOCKER_PASS = credentials('dockerhub') // 🔐 Credentials ID from Jenkins
+        IMAGE_NAME  = "${DOCKER_USER}/${APP_NAME}"
+        IMAGE_TAG   = "${RELEASE}-${BUILD_NUMBER}"
     }
 
     stages {
@@ -62,20 +66,15 @@ pipeline {
 
         stage("Build & Push Docker Image") {
             steps {
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'dockerhub', // ✅ matches the ID shown in your credentials screenshot
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASS'
-                    )
-                ]) {
-                    script {
-                        def imageName = "${DOCKER_USER}/${APP_NAME}"
-                        docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_PASS}") {
-                            def dockerImage = docker.build(imageName)
-                            dockerImage.push("${IMAGE_TAG}")
-                            dockerImage.push("latest")
-                        }
+                script {
+                    def docker_image
+                    docker.withRegistry('', DOCKER_PASS) {
+                        docker_image = docker.build("${IMAGE_NAME}")
+                    }
+
+                    docker.withRegistry('', DOCKER_PASS) {
+                        docker_image.push("${IMAGE_TAG}")
+                        docker_image.push("latest")
                     }
                 }
             }
