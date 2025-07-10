@@ -9,10 +9,9 @@ pipeline {
     environment {
         SONAR_PROJECT_KEY = 'myapp'
         SONAR_TOKEN       = credentials('jenkins-sonarqube-token')
-
-        APP_NAME   = "register-app-pipeline"
-        RELEASE    = "1.0.0"
-        IMAGE_TAG  = "${RELEASE}-${BUILD_NUMBER}"
+        APP_NAME          = "register-app-pipeline"
+        RELEASE           = "1.0.0"
+        IMAGE_TAG         = "${RELEASE}-${BUILD_NUMBER}"
     }
 
     stages {
@@ -65,7 +64,7 @@ pipeline {
             steps {
                 withCredentials([
                     usernamePassword(
-                        credentialsId: 'dockerhub',
+                        credentialsId: 'dckr_pat_lAZ9cmFPZZsNJQC1Eb1ynsbViKQ',
                         usernameVariable: 'DOCKER_USER',
                         passwordVariable: 'DOCKER_PASS'
                     )
