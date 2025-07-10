@@ -8,14 +8,13 @@ pipeline {
 
     environment {
         SONAR_PROJECT_KEY = 'myapp'
-        SONAR_TOKEN       = credentials('jenkins-sonarqube-token')
-
-        APP_NAME    = "register-app-pipeline"
-        RELEASE     = "1.0.0"
-        DOCKER_USER = "mohancc1" // 🔁 Replace with your actual DockerHub username if different
-        DOCKER_PASS = credentials('dockerhub') // 🔐 Credentials ID from Jenkins
-        IMAGE_NAME  = "${DOCKER_USER}/${APP_NAME}"
-        IMAGE_TAG   = "${RELEASE}-${BUILD_NUMBER}"
+        SONAR_TOKEN       = credentials('jenkins-sonarqube-token') // Still useful to define if needed elsewhere or for explicit pass
+        APP_NAME          = "register-app-pipeline"
+        RELEASE           = "1.0.0"
+        DOCKER_USER       = "mohancc1" // 🔁 Replace with your actual DockerHub username if different
+        DOCKER_PASS       = credentials('dockerhub') // 🔐 Credentials ID from Jenkins
+        IMAGE_NAME        = "${DOCKER_USER}/${APP_NAME}"
+        IMAGE_TAG         = "${RELEASE}-${BUILD_NUMBER}"
     }
 
     stages {
@@ -48,9 +47,8 @@ pipeline {
                 withSonarQubeEnv('sonarqube-server') {
                     sh '''
                         mvn sonar:sonar \
-                        -Dsonar.projectKey=$SONAR_PROJECT_KEY \
-                        -Dsonar.host.url=http://54.92.199.33:9000 \
-                        -Dsonar.login=$SONAR_TOKEN
+                        -Dsonar.projectKey=$SONAR_PROJECT_KEY
+                        # -Dsonar.host.url and -Dsonar.login are handled by withSonarQubeEnv
                     '''
                 }
             }
@@ -59,7 +57,8 @@ pipeline {
         stage("Quality Gate") {
             steps {
                 script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'jenkins-sonarqube-token'
+                    // Ensure the 'sonarqube-server' configuration in Jenkins uses 'jenkins-sonarqube-token'
+                    waitForQualityGate abortPipeline: false
                 }
             }
         }
@@ -69,10 +68,7 @@ pipeline {
                 script {
                     def docker_image
                     docker.withRegistry('', DOCKER_PASS) {
-                        docker_image = docker.build("${IMAGE_NAME}")
-                    }
-
-                    docker.withRegistry('', DOCKER_PASS) {
+                        docker_image = docker.build("${IMAGE_NAME}", ".") // Added '.' for Dockerfile context
                         docker_image.push("${IMAGE_TAG}")
                         docker_image.push("latest")
                     }
