@@ -63,10 +63,16 @@ pipeline {
 
         stage("Build & Push Docker Image") {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
                     script {
                         def imageName = "${DOCKER_USER}/${APP_NAME}"
-                        docker.withRegistry('https://index.docker.io/v1/', DOCKER_PASS) {
+                        docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_PASS}") {
                             def dockerImage = docker.build(imageName)
                             dockerImage.push("${IMAGE_TAG}")
                             dockerImage.push("latest")
