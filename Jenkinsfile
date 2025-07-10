@@ -65,16 +65,21 @@ pipeline {
         }
 
         stage("Build & Push Docker Image") {
-            steps {
-                script {
-                    def docker_image
-                    docker.withRegistry('', DOCKER_PASS) {
-                        docker_image = docker.build("${IMAGE_NAME}")
-                    }
+    steps {
+        withCredentials([
+            usernamePassword(
+                credentialsId: 'dockerhub', // ✅ Matches your Jenkins credential ID
+                usernameVariable: 'DOCKER_USER',
+                passwordVariable: 'DOCKER_PASS'
+            )
+        ]) {
+            script {
+                def imageName = "${DOCKER_USER}/${APP_NAME}"
 
-                    docker.withRegistry('', DOCKER_PASS) {
-                        docker_image.push("${IMAGE_TAG}")
-                        docker_image.push("latest")
+                docker.withRegistry('https://index.docker.io/v1/', [username: DOCKER_USER, password: DOCKER_PASS]) {
+                    def dockerImage = docker.build(imageName)
+                    dockerImage.push("${IMAGE_TAG}")
+                    dockerImage.push("latest")
                     }
                 }
             }
