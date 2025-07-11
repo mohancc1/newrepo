@@ -46,7 +46,7 @@ pipeline {
                     sh '''
                         mvn sonar:sonar \
                         -Dsonar.projectKey=$SONAR_PROJECT_KEY \
-                        -Dsonar.host.url=http://23.22.244.79/:9000 \
+                        -Dsonar.host.url=http://23.22.244.79:9000 \
                         -Dsonar.login=$SONAR_TOKEN
                     '''
                 }
