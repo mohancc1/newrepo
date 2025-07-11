@@ -8,8 +8,10 @@
     <artifactId>myapp</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-    <!-- ✅ Optional: for documentation -->
     <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <mainClass>com.example.Main</mainClass> <!-- 🔁 Change this to your actual main class -->
         <sonar.host.url>http://54.85.147.48:9000</sonar.host.url>
     </properties>
 
@@ -23,9 +25,23 @@
         </dependency>
     </dependencies>
 
-    <!-- ✅ SonarQube plugin -->
     <build>
         <plugins>
+            <!-- ✅ Package as executable JAR -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.2</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>${mainClass}</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+
+            <!-- ✅ SonarQube plugin -->
             <plugin>
                 <groupId>org.sonarsource.scanner.maven</groupId>
                 <artifactId>sonar-maven-plugin</artifactId>
