@@ -1,6 +1,4 @@
-public class Main {
-    public static void main(String[] args) throws InterruptedException {
-        System.out.println("Hello from myapp!");
-        Thread.sleep(Long.MAX_VALUE); // keeps app running
-    }
-}
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+COPY target/*.jar app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]
