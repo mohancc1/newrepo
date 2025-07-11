@@ -12,15 +12,15 @@ public class Main {
     public static void main(String[] args) throws IOException {
         int port = 8080;
 
-        // ✅ Bind to 0.0.0.0 instead of localhost
-        HttpServer server = HttpServer.create(new InetSocketAddress("0.0.0.0", port), 0);
+        // Create a basic HTTP server
+        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext("/", new HelloHandler());
 
         server.setExecutor(null); // Default executor
         server.start();
 
-        System.out.println("✅ Server started at http://0.0.0.0:" + port + "/");
-
+        System.out.println("✅ Server started at http://localhost:" + port + "/");
+        
         // Optional: add shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("🛑 Server is stopping...");
