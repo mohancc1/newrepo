@@ -39,9 +39,16 @@ pipeline {
 
         stage("SonarQube Analysis") {
             steps {
-script {
-waitForQualityGate abortPipeline: false, credentialsId: 'jenkins-sonarqube-token'
-}
+                withSonarQubeEnv('sonarqube-server') {
+                    // ✅ 'sonarqube-server' must match the name configured in:
+                    // Jenkins > Manage Jenkins > Configure System > SonarQube Servers
+                    sh """
+                        mvn sonar:sonar \
+                        -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                        -Dsonar.host.url=http://18.206.238.189:9000 \
+                        -Dsonar.login=$SONAR_TOKEN
+                    """
+                }
             }
         }
     }
