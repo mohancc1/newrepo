@@ -7,8 +7,12 @@ pipeline {
     }
 
     environment {
-        SONAR_PROJECT_KEY = 'myapp' // ✅ Change this to match your SonarQube project key if needed
-        SONAR_TOKEN = credentials('jenkins-sonarqube-token') // ✅ Must match Jenkins > Credentials ID for your Sonar token
+        SONAR_PROJECT_KEY = 'myapp'
+        SONAR_TOKEN       = credentials('jenkins-sonarqube-token')
+        
+        APP_NAME    = "register-app-pipeline"
+        RELEASE     = "1.0.0"
+        IMAGE_TAG   = "${RELEASE}-${BUILD_NUMBER}"
     }
 
     stages {
@@ -21,7 +25,6 @@ pipeline {
         stage("Checkout from SCM") {
             steps {
                 git branch: 'main', credentialsId: 'github', url: 'https://github.com/mohancc1/newrepo'
-                // ✅ 'github' must match your Jenkins credential ID for GitHub
             }
         }
 
@@ -40,23 +43,42 @@ pipeline {
         stage("SonarQube Analysis") {
             steps {
                 withSonarQubeEnv('sonarqube-server') {
-                    // ✅ 'sonarqube-server' must match the name configured in:
-                    // Jenkins > Manage Jenkins > Configure System > SonarQube Servers
-                    sh """
+                    sh '''
                         mvn sonar:sonar \
-                        -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                        -Dsonar.projectKey=$SONAR_PROJECT_KEY \
                         -Dsonar.host.url=http://34.204.170.100:9000 \
                         -Dsonar.login=$SONAR_TOKEN
-                    """
+                    '''
                 }
             }
         }
 
-        // ✅ Added Quality Gate Stage
         stage("Quality Gate") {
             steps {
                 script {
                     waitForQualityGate abortPipeline: false, credentialsId: 'jenkins-sonarqube-token'
+                }
+            }
+        }
+
+        stage("Build & Push Docker Image") {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub', // 👈 Make sure this ID matches what's stored in Jenkins
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
+                    script {
+                        def imageName = "${DOCKER_USER}/${APP_NAME}"
+
+                        docker.withRegistry('https://index.docker.io/v1/', 'dockerhub') {
+                            def dockerImage = docker.build(imageName)
+                            dockerImage.push("${IMAGE_TAG}")
+                            dockerImage.push("latest")
+                        }
+                    }
                 }
             }
         }
